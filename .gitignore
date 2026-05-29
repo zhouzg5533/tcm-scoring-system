@@ -1,0 +1,5 @@
+node_modules/
+*.msi
+~$*
+*.tmp
+.DS_Store

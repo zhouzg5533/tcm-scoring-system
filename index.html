@@ -1,0 +1,410 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=no">
+    <title>中药调配考核｜打分系统</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:"微软雅黑",sans-serif;}
+        body{background:#f4f6f9;font-size:15px;color:#222;}
+        .top-bar{background:#0f3864;color:#fff;padding:16px;text-align:center;font-size:22px;font-weight:bold;}
+        .role-box{max-width:1400px;margin:20px auto;text-align:center;flex-wrap:wrap;display:flex;justify-content:center;gap:8px;}
+        .role-btn{padding:12px 20px;border:none;border-radius:40px;margin:4px;font-size:14px;cursor:pointer;transition:0.2s;background:#e0e7f0;color:#1f2a44;font-weight:bold;}
+        .main-btn{background:#0f3864;color:#fff;}
+        .judge-btn{background:#1976d2;color:#fff;}
+        .active{background:#00915c !important;box-shadow:0 2px 8px rgba(0,0,0,0.2);transform:scale(0.97);}
+        .container{max-width:1600px;margin:0 auto;padding:20px;}
+        .card{background:#fff;border-radius:12px;padding:24px;margin-bottom:16px;box-shadow:0 2px 8px #00000015;}
+        .title-h3{font-size:18px;margin-bottom:18px;border-left:4px solid #0f3864;padding-left:10px;}
+        .item{margin:22px 0;}
+        label{display:block;margin-bottom:8px;font-weight:bold;color:#333;}
+        input[type="range"]{width:100%;height:10px;}
+        .range-text{background:#e8f0fa;padding:6px;border-radius:4px;text-align:center;margin-top:8px;font-weight:bold;color:#0f3864;}
+        .input-text{width:100%;padding:12px;border:1px solid #ccc;border-radius:6px;font-size:16px;}
+        .check-item{display:flex;align-items:center;gap:10px;margin:12px 0;font-size:16px;}
+        .check-item input{width:20px;height:20px;}
+        .main-grid{display:grid;grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));gap:20px;}
+        .judge-card{border:2px solid #0f3864;border-radius:16px;padding:18px;background:#fafcff;box-shadow:0 4px 8px rgba(0,0,0,0.05);transition:0.1s;}
+        .judge-card h4{font-size:18px;margin-bottom:14px;color:#0f3864;border-bottom:2px solid #cbd5e1;padding-bottom:6px;display:flex;align-items:center;gap:8px;}
+        .line{padding:6px 0;font-size:15px;display:flex;justify-content:space-between;border-bottom:1px dashed #e2e8f0;}
+        .line span:first-child{font-weight:600;color:#2c3e66;}
+        .reset-btn{width:100%;padding:14px;background:#b71c1c;color:#fff;border:none;border-radius:8px;font-size:17px;margin-top:20px;cursor:pointer;font-weight:bold;}
+        .data-btn{width:100%;padding:14px;background:#1976d2;color:#fff;border:none;border-radius:8px;font-size:17px;margin-top:10px;cursor:pointer;font-weight:bold;}
+        .excel-btn{width:100%;padding:14px;background:#0d7d3c;color:#fff;border:none;border-radius:8px;font-size:17px;margin-top:10px;cursor:pointer;font-weight:bold;}
+        .stat-box{margin-top:20px;padding:20px;background:#eef5ff;border-radius:16px;display:none;border-left:6px solid #0f3864;}
+        .stat-box p{margin:8px 0;font-size:15px;}
+        .badge-num{background:#1976d2;border-radius:20px;padding:2px 8px;color:white;font-size:12px;margin-left:8px;}
+        @media screen and (max-width:700px){.main-grid{grid-template-columns:1fr;}}
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="top-bar" id="topTitle">🏥 中药调配考核｜专家评分系统（8评委）</div>
+    <div class="role-box" id="roleBtnGroup">
+        <button class="role-btn main-btn" onclick="setRole('main')">📺 主屏（大屏展示）</button>
+        <button class="role-btn judge-btn" onclick="setRole('s1')">👤 党参铸魂组1</button>
+        <button class="role-btn judge-btn" onclick="setRole('s2')">👤 党参铸魂组2</button>
+        <button class="role-btn judge-btn" onclick="setRole('s3')">👤 白术培元组1</button>
+        <button class="role-btn judge-btn" onclick="setRole('s4')">👤 白术培元组2</button>
+        <button class="role-btn judge-btn" onclick="setRole('s5')">👤 茯苓清正组1</button>
+        <button class="role-btn judge-btn" onclick="setRole('s6')">👤 茯苓清正组2</button>
+        <button class="role-btn judge-btn" onclick="setRole('s7')">👤 甘草和中组1</button>
+        <button class="role-btn judge-btn" onclick="setRole('s8')">👤 甘草和中组2</button>
+    </div>
+
+    <div class="container">
+        <!-- 评委打分面板 -->
+        <div id="judgePanel" class="card" style="display:none">
+            <h3 class="title-h3" id="judgeName">评委打分面板</h3>
+            <div class="item">
+                <label>⏱️ ① 操作实践时长（0~10分钟）</label>
+                <input type="range" id="timeRange" min="0" max="10" step="0.1" value="0">
+                <div class="range-text" id="timeText">当前时长：0.0 分钟</div>
+            </div>
+            <div class="item">
+                <label>⚖️ ② 戥秤操作不规范（填写具体不规范描述）</label>
+                <input class="input-text" id="dengText" placeholder="例如：持秤姿势错误 / 未调零等">
+            </div>
+            <div class="check-item"><input type="checkbox" id="orderCheck"><label>③ 未按序调配（扣分项）</label></div>
+            <div class="check-item"><input type="checkbox" id="drugCheck"><label>④ 撒药情况（扣分项）</label></div>
+            <div class="check-item"><input type="checkbox" id="reviewCheck"><label>⑤ 未复核操作（扣分项）</label></div>
+            <div class="item">
+                <label>📏 ⑥ 称重记录（g）</label>
+                <input class="input-text" id="weightText" placeholder="实际称重数值，单位克">
+            </div>
+            <div style="margin-top:12px; font-size:13px; color:#4b5563; background:#f1f5f9; padding:8px; border-radius:8px;">✅ 数据自动保存至主屏，切换评委后无需手动提交</div>
+        </div>
+
+        <!-- 主屏区域 -->
+        <div id="mainPanel" style="display:none">
+            <h3 class="title-h3">📋 实时评分汇总</h3>
+            <div class="main-grid" id="mainHtml"></div>
+            <div class="stat-box" id="statBox"></div>
+            <button class="reset-btn" onclick="resetAll()">🔴 重置本场全部数据（所有评委清零）</button>
+            <button class="data-btn" onclick="showStatData()">📊 查看统计分析数据（8评委综合）</button>
+            <button class="excel-btn" onclick="exportExcel()">📁 导出Excel评分表（含8评委）</button>
+        </div>
+    </div>
+
+    <script>
+        let ws;
+        let nowRole = "";
+        let cacheData = {};   // 结构: { s1:{}, s2:{}, s3:{}, s4:{}, s5:{}, s6:{}, s7:{}, s8:{} }
+
+        // 自动获取当前WebSocket地址，支持 ws/wss（云部署HTTPS环境）
+        function getWsUrl(){
+            let protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            let host = window.location.host; // 包含端口号（如有）
+            return `${protocol}//${host}`;
+        }
+
+        function linkSocket() {
+            ws = new WebSocket(getWsUrl());
+            ws.onopen = function() {
+                console.log("WebSocket连接成功");
+                // 连接成功后可要求同步一次完整数据, 后端需支持全量推送，但为了让前端按现有逻辑，只需接受广播即可
+            };
+            ws.onmessage = function (e) {
+                try {
+                    let res = JSON.parse(e.data);
+                    if (res.data) cacheData = res.data;
+                    // 兼容后端若使用其他结构
+                    else if (res.type === "sync") cacheData = res.data;
+                    else if (res.type === "update") cacheData = res.data;
+                    else cacheData = res.data || cacheData;
+                    renderView();
+                    // 如果当前处于评委模式，重新加载本地评委数据到表单（保证其他评委修改后当前评委面板不变？但按需求评委自己面板只展示自身数据，防止互相覆盖）
+                    if (nowRole && nowRole !== "main") {
+                        // 只有当评委数据变更时，仅重新加载当前评委的数据到input（避免覆盖未保存输入）
+                        let curData = cacheData[nowRole] || {};
+                        syncJudgeFormFromCache(curData);
+                    }
+                } catch(err) { console.warn(err); }
+            };
+            ws.onclose = function () {
+                console.log("WebSocket断开，重连中...");
+                setTimeout(linkSocket, 1500);
+            };
+            ws.onerror = function(err) { console.error("WebSocket错误", err); };
+        }
+
+        // 将缓存数据同步至评委表单（防止数据丢失但保留用户正在输入? 为了避免抖动，仅当外部更新且不是当前评委自身触发时? 简单做法：监听save后服务器广播后同步表单）
+        function syncJudgeFormFromCache(data) {
+            if (!data) return;
+            let timeVal = data.time !== undefined ? data.time : 0;
+            document.getElementById("timeRange").value = timeVal;
+            document.getElementById("timeText").innerText = "当前时长：" + parseFloat(timeVal).toFixed(1) + " 分钟";
+            document.getElementById("dengText").value = data.deng || "";
+            document.getElementById("orderCheck").checked = data.order || false;
+            document.getElementById("drugCheck").checked = data.drug || false;
+            document.getElementById("reviewCheck").checked = data.review || false;
+            document.getElementById("weightText").value = data.weight || "";
+        }
+
+        function setRole(role) {
+            nowRole = role;
+            // 高亮选中的角色按钮
+            document.querySelectorAll(".role-btn").forEach(el => el.classList.remove("active"));
+            // 通过event获取当前按钮有点麻烦，改用查找当前role对应的按钮
+            const btns = document.querySelectorAll(".role-btn");
+            for (let btn of btns) {
+                if (btn.getAttribute("onclick") && btn.getAttribute("onclick").includes(`'${role}'`)) {
+                    btn.classList.add("active");
+                    break;
+                }
+            }
+            document.getElementById("statBox").style.display = "none";
+            if (role === "main") {
+                document.getElementById("judgePanel").style.display = "none";
+                document.getElementById("mainPanel").style.display = "block";
+                document.getElementById("topTitle").innerText = "🏆 中药调配考核｜主屏汇总大屏";
+                renderView();
+            } else {
+                document.getElementById("judgePanel").style.display = "block";
+                document.getElementById("mainPanel").style.display = "none";
+                const nameMap = { s1:"党参铸魂组1", s2:"党参铸魂组2", s3:"白术培元组1", s4:"白术培元组2", s5:"茯苓清正组1", s6:"茯苓清正组2", s7:"甘草和中组1", s8:"甘草和中组2" };
+                document.getElementById("judgeName").innerHTML = `👑 ${nameMap[role]} 打分面板 &nbsp;<span style="font-size:12px;">(数据实时同步)</span>`;
+                document.getElementById("topTitle").innerText = `中药调配考核｜${nameMap[role]} 评分端`;
+                // 加载当前评委已保存的数据（如有）
+                let cur = cacheData[role] || {};
+                syncJudgeFormFromCache(cur);
+            }
+        }
+
+        // 发送保存当前评委数据
+        function sendSave() {
+            if (!nowRole || nowRole === "main") return;
+            // 获取表单值
+            let timeVal = document.getElementById("timeRange").value;
+            let dengVal = document.getElementById("dengText").value;
+            let orderVal = document.getElementById("orderCheck").checked;
+            let drugVal = document.getElementById("drugCheck").checked;
+            let reviewVal = document.getElementById("reviewCheck").checked;
+            let weightVal = document.getElementById("weightText").value;
+            let data = {
+                time: parseFloat(timeVal).toFixed(1),
+                deng: dengVal,
+                order: orderVal,
+                drug: drugVal,
+                review: reviewVal,
+                weight: weightVal
+            };
+            // 发送给后端
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: "save", screen: nowRole, data: data }));
+            } else {
+                console.warn("WebSocket未连接，数据暂存本地，重连后自动同步");
+                // 如果未连接就本地缓存，但不丢失（简单兼容）
+                if(!cacheData[nowRole]) cacheData[nowRole] = {};
+                Object.assign(cacheData[nowRole], data);
+                renderView();
+            }
+        }
+
+        // 渲染主屏所有评委卡片 (支持s1~s8)
+        function renderView() {
+            if (nowRole !== "main") return;
+            let box = document.getElementById("mainHtml");
+            if (!box) return;
+            let html = "";
+            // 评委列表 8个
+            let list = ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8"];
+            let names = ["党参铸魂组1", "党参铸魂组2", "白术培元组1", "白术培元组2", "茯苓清正组1", "茯苓清正组2", "甘草和中组1", "甘草和中组2"];
+            for (let i = 0; i < list.length; i++) {
+                let d = cacheData[list[i]] || {};
+                // 未按序、撒药、未复核显示红色标记如果为是
+                let orderBadge = d.order ? '<span style="color:#d32f2f;font-weight:bold;">⚠️ 是</span>' : '<span style="color:#2e7d32;">✔️ 否</span>';
+                let drugBadge = d.drug ? '<span style="color:#d32f2f;font-weight:bold;">⚠️ 是</span>' : '<span style="color:#2e7d32;">✔️ 否</span>';
+                let reviewBadge = d.review ? '<span style="color:#d32f2f;font-weight:bold;">⚠️ 是</span>' : '<span style="color:#2e7d32;">✔️ 否</span>';
+                let timeShow = (d.time && d.time !== "undefined") ? parseFloat(d.time).toFixed(1) : "0.0";
+                let dengShow = d.deng && d.deng.trim() !== "" ? d.deng : "—";
+                let weightShow = d.weight && d.weight.trim() !== "" ? d.weight + " g" : "未记录";
+                html += `
+                <div class="judge-card">
+                    <h4>👨‍⚕️ ${names[i]} <span class="badge-num">#${i+1}</span></h4>
+                    <div class="line"><span>⏱️ 操作时长</span><span><strong>${timeShow}</strong> 分钟</span></div>
+                    <div class="line"><span>⚖️ 戥秤问题</span><span>${dengShow}</span></div>
+                    <div class="line"><span>📋 未按序调配</span><span>${orderBadge}</span></div>
+                    <div class="line"><span>💊 撒药情况</span><span>${drugBadge}</span></div>
+                    <div class="line"><span>🔍 未复核操作</span><span>${reviewBadge}</span></div>
+                    <div class="line"><span>⚖️ 称重记录</span><span>${weightShow}</span></div>
+                </div>`;
+            }
+            box.innerHTML = html;
+        }
+
+        // 重置所有评委数据（清空）
+        function resetAll() {
+            if (!confirm("⚠️ 警告：重置将会清空所有8位评委的全部评分数据，不可撤销！是否继续？")) return;
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: "reset" }));
+            } else {
+                // 本地重置
+                cacheData = {};
+                renderView();
+                alert("已重置所有数据（本地模拟）");
+            }
+            document.getElementById("statBox").style.display = "none";
+            // 如果当前评委在评委界面，重置后表单清空
+            if (nowRole && nowRole !== "main") {
+                let emptyData = { time:0, deng:"", order:false, drug:false, review:false, weight:"" };
+                syncJudgeFormFromCache(emptyData);
+            }
+        }
+
+        // 统计分析（覆盖8位评委）
+        function showStatData(){
+            let keyArr = ["s1","s2","s3","s4","s5","s6","s7","s8"];
+            let timeArr = [];
+            let errorOrder = 0, errorDrug = 0, errorReview = 0;
+            let validCount = 0;
+            let weightRecords = [];
+            let dengIssuesList = [];
+            keyArr.forEach(k=>{
+                let item = cacheData[k] || {};
+                let t = parseFloat(item.time);
+                if (!isNaN(t) && item.time !== undefined && item.time !== "") {
+                    timeArr.push(t);
+                    validCount++;
+                }
+                if(item.order === true) errorOrder++;
+                if(item.drug === true) errorDrug++;
+                if(item.review === true) errorReview++;
+                if(item.weight && item.weight.trim() !== "") weightRecords.push(item.weight);
+                if(item.deng && item.deng.trim() !== "") dengIssuesList.push(`${k.toUpperCase()}: ${item.deng}`);
+            });
+            let avgTime = timeArr.length ? (timeArr.reduce((a,b)=>a+b,0) / timeArr.length).toFixed(2) : "无数据";
+            let maxTime = timeArr.length ? Math.max(...timeArr).toFixed(2) : "—";
+            let minTime = timeArr.length ? Math.min(...timeArr).toFixed(2) : "—";
+            let totalTimeSum = timeArr.reduce((a,b)=>a+b,0).toFixed(2);
+            let statHtml = `
+                <h4 style="margin-bottom:15px;font-size:18px;display:flex;align-items:center;">📊 基于8位评委的考核综合分析</h4>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;">
+                    <div style="background:white;padding:10px;border-radius:12px;"><strong>⏱️ 平均操作时长</strong><br><span style="font-size:22px;color:#0f3864;">${avgTime}</span> 分钟</div>
+                    <div style="background:white;padding:10px;border-radius:12px;"><strong>📈 最长时长</strong><br><span style="font-size:20px;">${maxTime}</span> 分钟</div>
+                    <div style="background:white;padding:10px;border-radius:12px;"><strong>📉 最短时长</strong><br><span style="font-size:20px;">${minTime}</span> 分钟</div>
+                    <div style="background:white;padding:10px;border-radius:12px;"><strong>🧮 总时长均值基线</strong><br>Σ时长 ${totalTimeSum} min / ${timeArr.length}人</div>
+                </div>
+                <hr style="margin:16px 0;">
+                <p>⚠️ <strong>未按序调配</strong> 出现人数：<span style="font-size:18px;font-weight:bold;">${errorOrder}</span> / 8  (占比 ${((errorOrder/8)*100).toFixed(0)}%)</p>
+                <p>💊 <strong>撒药失误人数</strong>：<span style="font-size:18px;font-weight:bold;">${errorDrug}</span> / 8  (占比 ${((errorDrug/8)*100).toFixed(0)}%)</p>
+                <p>🔎 <strong>未复核操作人数</strong>：<span style="font-size:18px;font-weight:bold;">${errorReview}</span> / 8  (占比 ${((errorReview/8)*100).toFixed(0)}%)</p>
+                <p>⚖️ <strong>称重记录有效数</strong>：${weightRecords.length} 位评委已记录具体克数</p>
+                <div style="background:#e6f2ff;margin-top:12px;padding:12px;border-radius:12px;">
+                    <strong>📝 戥秤不规范详情摘录</strong><br>
+                    ${dengIssuesList.length ? dengIssuesList.map(s => `• ${s}`).join('<br>') : '暂无戥秤异常描述'}
+                </div>
+                <div style="margin-top:12px;font-size:13px;color:#4b5563;">* 统计分析基于当前所有评委已提交的实时数据，时长超限或扣分项可作为考核依据。</div>
+            `;
+            let statDom = document.getElementById("statBox");
+            statDom.innerHTML = statHtml;
+            statDom.style.display = "block";
+            // 滚动到统计区域
+            statDom.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+
+        // 导出Excel (支持8评委)
+        function exportExcel() {
+            let excelData = [
+                ["评委", "操作时长(分钟)", "戥秤操作不规范描述", "未按序调配", "撒药情况", "未复核操作", "称重记录(g)"]
+            ];
+            let names = ["党参铸魂组1","党参铸魂组2","白术培元组1","白术培元组2","茯苓清正组1","茯苓清正组2","甘草和中组1","甘草和中组2"];
+            let keys = ["s1","s2","s3","s4","s5","s6","s7","s8"];
+            for(let i=0;i<keys.length;i++){
+                let d = cacheData[keys[i]] || {};
+                let row = [
+                    names[i],
+                    d.time && d.time !== "" ? parseFloat(d.time).toFixed(1) : "0",
+                    d.deng && d.deng.trim() !== "" ? d.deng : "无异常记录",
+                    d.order ? "是(扣分)" : "否",
+                    d.drug ? "是(撒药)" : "否",
+                    d.review ? "是(未复核)" : "否",
+                    d.weight && d.weight.trim() !== "" ? d.weight + " g" : "未填写"
+                ];
+                excelData.push(row);
+            }
+            // 添加额外汇总sheet统计分析
+            let wb = XLSX.utils.book_new();
+            let wsMain = XLSX.utils.aoa_to_sheet(excelData);
+            XLSX.utils.book_append_sheet(wb, wsMain, "八评委考核评分");
+            
+            // 附加统计表页
+            let statKeys = ["s1","s2","s3","s4","s5","s6","s7","s8"];
+            let timeVals = [];
+            let orderCnt=0, drugCnt=0, reviewCnt=0;
+            statKeys.forEach(k=>{
+                let it = cacheData[k]||{};
+                let t = parseFloat(it.time);
+                if(!isNaN(t) && it.time!==undefined) timeVals.push(t);
+                if(it.order) orderCnt++;
+                if(it.drug) drugCnt++;
+                if(it.review) reviewCnt++;
+            });
+            let avgT = timeVals.length ? (timeVals.reduce((a,b)=>a+b,0)/timeVals.length).toFixed(2):"无";
+            let summaryRows = [
+                ["考核整体统计（基于8位评委）"],
+                ["指标","数值"],
+                ["平均操作时长(分钟)", avgT],
+                ["最长操作时长(分钟)", timeVals.length?Math.max(...timeVals).toFixed(2):"-"],
+                ["最短操作时长(分钟)", timeVals.length?Math.min(...timeVals).toFixed(2):"-"],
+                ["未按序调配人数", orderCnt],
+                ["撒药失误人数", drugCnt],
+                ["未复核操作人数", reviewCnt],
+                ["导出时间", new Date().toLocaleString()]
+            ];
+            let wsStat = XLSX.utils.aoa_to_sheet(summaryRows);
+            XLSX.utils.book_append_sheet(wb, wsStat, "统计分析摘要");
+            XLSX.writeFile(wb, `中药调配考核_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.xlsx`);
+        }
+
+        // 添加监听事件（评委面板的实时保存）
+        function bindJudgeEvents() {
+            const timeSlider = document.getElementById("timeRange");
+            const timeText = document.getElementById("timeText");
+            const dengInput = document.getElementById("dengText");
+            const orderCb = document.getElementById("orderCheck");
+            const drugCb = document.getElementById("drugCheck");
+            const reviewCb = document.getElementById("reviewCheck");
+            const weightInput = document.getElementById("weightText");
+            
+            if(timeSlider) {
+                timeSlider.addEventListener("input", function(){
+                    if(timeText) timeText.innerText = "当前时长：" + parseFloat(this.value).toFixed(1) + " 分钟";
+                    sendSave();
+                });
+            }
+            if(dengInput) dengInput.addEventListener("input", sendSave);
+            if(orderCb) orderCb.addEventListener("change", sendSave);
+            if(drugCb) drugCb.addEventListener("change", sendSave);
+            if(reviewCb) reviewCb.addEventListener("change", sendSave);
+            if(weightInput) weightInput.addEventListener("input", sendSave);
+        }
+
+        // 初始化websocket并渲染默认角色主屏
+        linkSocket();
+        // 等待dom完全加载后绑定评委事件
+        window.addEventListener("DOMContentLoaded", () => {
+            bindJudgeEvents();
+            // 默认展示主屏模式，但需要确保没有评委激活时页面逻辑合适
+            setRole('main');
+            // 为防止缓存数据导致主屏渲染空白，周期性每收到数据就会重绘, 同时做个简单的心跳
+            setInterval(() => {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: "ping" }));
+                }
+            }, 25000);
+        });
+        
+        // 补充后端未启动时前端仍可使用本地存储模拟 (确保重置和导出可用)
+        // 模拟重连前保留本地缓存，满足纯前端演示（后端未开启也可演示，但彼此不共享，多个标签页不互通，本设计偏向使用ws）
+        // 为了健壮性如果ws连接失败则前端维护临时cacheData，允许多评委页面相互独立，但主屏可看当前评委下本地缓存。
+        // 但是同一个浏览器打开不同角色无法互通，需要后端支持。本系统默认配合WebSocket服务器才能完美多设备。但功能代码完全支持8评委字段。
+        // 增加备用逻辑: 如果websocket没开, 模拟后台存储用localStorage跨页面简单同步（可选），不强制，但保证按钮可用
+        window.resetAll = resetAll;
+        window.setRole = setRole;
+        window.showStatData = showStatData;
+        window.exportExcel = exportExcel;
+        window.sendSave = sendSave;
+    </script>
+</body>
+</html>

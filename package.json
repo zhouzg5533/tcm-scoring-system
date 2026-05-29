@@ -1,0 +1,15 @@
+{
+  "name": "tcm-scoring-system",
+  "version": "1.0.0",
+  "description": "中药调配考核打分系统",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "ws": "^8.20.1"
+  }
+}
